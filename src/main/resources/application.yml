@@ -1,0 +1,24 @@
+server:
+  port: 8000
+spring:
+  application:
+    name: my-auth
+  thymeleaf:
+    encoding: UTF-8
+    prefix: classpath:/views/
+    suffix: .html
+    mode: HTML
+    cache: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: mysql
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  datasource:
+    url: jdbc:mysql://localhost:3306/my_auth
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
