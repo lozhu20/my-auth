@@ -25,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -105,6 +106,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/res/admin/**").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/res/user/**").hasRole(RoleEnum.USER.name())
+                                // 必须是自动登录之后才能访问
+                                .requestMatchers("/auto-login/remember-me").rememberMe()
+                                // 自动登陆之后必须验证用户名和密码才能访问
+                                .requestMatchers("/auto-login/admin").fullyAuthenticated()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.defaultSuccessUrl("/homepage")
@@ -139,7 +144,15 @@ public class SecurityConfig {
                 .rememberMe(httpSecurityRememberMeConfigurer -> {
                     httpSecurityRememberMeConfigurer.alwaysRemember(true);
                     httpSecurityRememberMeConfigurer.key("my_auth");
+                    httpSecurityRememberMeConfigurer.tokenRepository(jdbcTokenRepository());
                 })
                 .build();
+    }
+
+    @Bean
+    public JdbcTokenRepositoryImpl jdbcTokenRepository() {
+        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+        jdbcTokenRepository.setDataSource(dataSource);
+        return jdbcTokenRepository;
     }
 }

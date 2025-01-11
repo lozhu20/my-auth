@@ -27,8 +27,8 @@ public class UserDaoTest {
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
                 .enabled(true)
-                .password(passwordEncoder.encode("p1"))
                 .username("u1")
+                .password(passwordEncoder.encode("p1"))
                 .build();
         Role role1 = Role.builder()
                 .description("管理员")
@@ -42,8 +42,8 @@ public class UserDaoTest {
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
                 .enabled(true)
-                .password(passwordEncoder.encode("p2"))
                 .username("u2")
+                .password(passwordEncoder.encode("p2"))
                 .build();
         Role role2 = Role.builder()
                 .description("普通用户")
