@@ -1,6 +1,9 @@
 package day.happy365.myauth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.code.kaptcha.Producer;
+import com.google.code.kaptcha.impl.DefaultKaptcha;
+import com.google.code.kaptcha.util.Config;
 import day.happy365.myauth.constant.RoleEnum;
 import day.happy365.myauth.service.UserService;
 import jakarta.servlet.ServletOutputStream;
@@ -29,8 +32,7 @@ import org.springframework.security.web.authentication.rememberme.JdbcTokenRepos
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Configuration
 @EnableWebSecurity
@@ -79,13 +81,13 @@ public class SecurityConfig {
 //        return jdbcUserDetailsManager;
 //    }
 
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        authenticationProvider.setUserDetailsService(userService);
-        return new ProviderManager(authenticationProvider);
-    }
+//    @Bean
+//    public AuthenticationManager authenticationManager() {
+//        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+//        authenticationProvider.setPasswordEncoder(passwordEncoder());
+//        authenticationProvider.setUserDetailsService(userService);
+//        return new ProviderManager(authenticationProvider);
+//    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -104,7 +106,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/res/admin/**").hasRole(RoleEnum.ADMIN.name())
+                        auth.requestMatchers("/verify-code").permitAll()
+                                .requestMatchers("/res/admin/**").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/res/user/**").hasRole(RoleEnum.USER.name())
                                 // 必须是自动登录之后才能访问
                                 .requestMatchers("/auto-login/remember-me").rememberMe()
@@ -154,5 +157,31 @@ public class SecurityConfig {
         JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
         jdbcTokenRepository.setDataSource(dataSource);
         return jdbcTokenRepository;
+    }
+
+    @Bean
+    public Producer verifyCode() {
+        Properties properties = new Properties();
+        properties.setProperty("kaptcha.image.width", "150");
+        properties.setProperty("kaptcha.image.height", "150");
+        properties.setProperty("kaptcha.textproducer.char.string", "0123456789");
+        properties.setProperty("kaptcha.textproducer.char.length", "4");
+        Config config = new Config(properties);
+        DefaultKaptcha defaultKaptcha = new DefaultKaptcha();
+        defaultKaptcha.setConfig(config);
+        return defaultKaptcha;
+    }
+
+    @Bean
+    public MyAuthenticationProvider myAuthenticationProvider() {
+        MyAuthenticationProvider myAuthenticationProvider = new MyAuthenticationProvider();
+        myAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        myAuthenticationProvider.setUserDetailsService(userService);
+        return myAuthenticationProvider;
+    }
+
+    @Bean
+    protected AuthenticationManager authenticationManager() {
+        return new ProviderManager(List.of(myAuthenticationProvider()));
     }
 }
